@@ -11,7 +11,7 @@ path_img_h = "02_data/data_cleaned_25-07-30/Preparation_manuelle_du_jeu_de_donne
 path_img_d = "02_data/data_cleaned_25-07-30/Preparation_manuelle_du_jeu_de_donnees/Diseased/"
 name_img = "1.png"
 
-# img = cv2.imread(path_img + name_img, cv2.IMREAD_COLOR)
+# img = cv2.imread("02_data/data_cleaned_25-07-30/Preparation_manuelle_du_jeu_de_donnees/Healthy/Black-grass/1.png", cv2.IMREAD_COLOR)
 
 # plt.imshow(curr_img)
 # plt.show()
@@ -20,6 +20,7 @@ name_img = "1.png"
 ## Create an empty list to gather the information about the images and a list for unretrieved images
 data_list = []
 nrdata_list = []
+list_unread = []
 
 ## List the files with photos in them in both Healthy and Diseased files
 list_files_h = os.listdir(path_img_h)
@@ -57,11 +58,15 @@ for i_sp in tqdm(list_paths_h + list_paths_d):
                 "name" : i_img, 
                 "hauteur" : curr_img.shape[0], 
                 "largeur" : curr_img.shape[1],
-                "disease" : disease_name
+                "disease" : disease_name,
+                "mean_blue" : np.mean(curr_img[:, :, 0]),
+                "mean_green" : np.mean(curr_img[:, :, 1]),
+                "mean_red" : np.mean(curr_img[:, :, 2])
                 }
             data_list.append(line)
         else:
             print(f"[!] Image non lue : {path_img}")
+            list_unread.append(path_img)
             nrdata_list.append(path_img)
 
 data_df = pd.DataFrame(data_list)
@@ -69,4 +74,6 @@ data_df['nb_pixel'] = data_df.hauteur*data_df.largeur
 data_df.head
 
 data_df.to_csv('02_data/25-07-30_data_preliminary.csv', index=None)
+pd.DataFrame(list_unread).to_csv('02_data/25-07-30_unread_files.csv', index=None)
+
 
