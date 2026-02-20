@@ -7,6 +7,7 @@ import pandas as pd
 import seaborn as sns
 import shutil
 from datetime import datetime
+import random
 
 ##############################################
 ### Données brutes -> données à pré-traité ###
@@ -48,6 +49,27 @@ for x_folder in tqdm(os.listdir(path_plantvillage)):
     elif "healthy" not in x_folder and not os.path.exists(new_path + "Diseased/" + x_folder):
         shutil.copytree(path_plantvillage + x_folder, new_path + "Diseased/" + x_folder)
     
+# Visualiser quelques images
+images = [
+    os.path.join(root, f)
+    for root, _, files in os.walk(new_path)
+    for f in files
+    if f.endswith((".png", ".jpg", ".jpeg"))
+]
+
+nb_images = 5
+
+for i, img_path in enumerate(random.sample(images, nb_images)):
+
+    img = cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB)
+    species = img_path.split(os.sep)[-2]  # nom du dossier espèce
+
+    plt.subplot(1, nb_images, i+1)
+    plt.imshow(img)
+    plt.title(species, fontsize=8)
+    plt.axis("off")
+
+plt.show();
 
 ###################################
 ### Récapitulatif des métriques ###
@@ -55,12 +77,6 @@ for x_folder in tqdm(os.listdir(path_plantvillage)):
 
 path_img_h = "02_data/data_preliminary/Healthy/"
 path_img_d = "02_data/data_preliminary/Diseased/"
-name_img = "1.png"
-
-# img = cv2.imread("02_data/data_cleaned_25-07-30/Preparation_manuelle_du_jeu_de_donnees/Healthy/Black-grass/1.png", cv2.IMREAD_COLOR)
-
-# plt.imshow(curr_img)
-# plt.show()
 
 # Initialiser les listes de résltat
 data_list = [] # liste :  variables de taille, flou, moyenne de couleurs
@@ -143,45 +159,44 @@ print(data_df['laplacian_var'].quantile(q = [0.05, 0.1, 0.15, 0.20, 0.25]))
 data_df['is_diseased'] = data_df['disease'].notna().astype(int)
 
 
-# Graphic representation
-## Distribution des images
+# Distribution des images
 order_distribution = data_df['sp'].value_counts().index
-counts = data_df['sp'].value_counts().values
-sns.catplot(data = data_df, y = 'sp', kind = 'count', order = order_distribution, hue = 'is_diseased')
-for count, sp in zip(counts, order_distribution): # Annotation du nombre d'image pour chaque espèce
-    plt.annotate(str(count), 
-                 xy = ((count + 1), sp),
-                 va = 'center')
+
+sns.catplot(data = data_df, y = 'sp', 
+                kind = 'count', 
+                order = order_distribution, 
+                hue = 'is_diseased',
+                legend = False)
+
+plt.legend(title = "Maladie", loc = 'right', labels = ["Malade", "Saine"])
 plt.xlabel("Nombre d'images")
 plt.ylabel("Espèces")
+plt.grid()
 plt.show();
 
 
-## Distribution des tailles
+# Distribution des tailles
 plt.hist(data = data_df, x = 'nb_pixel')
 plt.show();
 data_df.nb_pixel.value_counts(normalize = True)
 
-## Heatmap de la largeur et la longueur
+# Heatmap de la largeur et la longueur
 pivot_table = data_df.groupby(["hauteur", "largeur"]).size().unstack(fill_value=0)
 data_df.value_counts(subset=["hauteur", "largeur"], normalize = True)  
 data_df.value_counts(subset=["hauteur", "largeur"])
 
-### Afficher la heatmap
 sns.heatmap(np.log(pivot_table), cmap="viridis")
 plt.show()
 
-## Distribution des espèces  256 x 256
-data256_df = data_df.loc[(data_df["hauteur"] == 256) & (data_df["largeur"] == 256)]
-order_distribution = data256_df['sp'].value_counts().index
-counts = data256_df['sp'].value_counts().values
-sns.catplot(data = data256_df, y = 'sp', kind = 'count', order = order_distribution, hue = 'is_diseased')
-plt.xlabel("Nombre d'images")
-plt.ylabel("Espèces")
-plt.show();
 
 ## Distribution RGB
+plt.subplot(3, 1, 1)
 plt.hist(data_df["mean_red"], bins=50, color="red", alpha=0.7)
+plt.subplot(3, 1, 2)
+plt.hist(data_df["mean_green"], bins=50, color="green", alpha=0.7)
+plt.subplot(3, 1, 3)
+plt.hist(data_df["mean_blue"], bins=50, color="blue", alpha=0.7)
+plt.title("Niveau moyen RGB", loc = 'left')
 plt.show()
 
 
