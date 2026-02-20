@@ -118,8 +118,8 @@ for i_sp in tqdm(os.listdir(base_path)):
 
         path_img = os.path.join(base_path, i_sp, i_img)
 
-        ## Read the image in greyscale
-        curr_img = cv2.imread(path_img, cv2.IMREAD_GRAYSCALE)
+        ## Read the image in color
+        curr_img = cv2.imread(path_img, cv2.IMREAD_C)
 
         if curr_img is None:
             print(f"[!] Image non lue : {path_img}")
@@ -137,14 +137,16 @@ for i_sp in tqdm(os.listdir(base_path)):
 
         if all(i_dim == 256 for i_dim in size):
             var_rescaled = 0
-            curr_img_normalised = curr_img/255 # Normalisation de l'image entre 0 et 1
-            ghost_error = cv2.imwrite(path_img, curr_img_normalised)
+            #curr_img_normalised = curr_img/255 # Normalisation de l'image entre 0 et 1
+            #ghost_error = cv2.imwrite(path_img, curr_img_normalised)
+            ghost_error = cv2.imwrite(path_img, curr_img)
                 
         else:
             var_rescaled = 1
             resized_image = cv2.resize(curr_img, (new_width, new_height), interpolation=cv2.INTER_LINEAR) # Redimensionnalisation de l'image
-            resized_img_normalised = resized_image/255 # Normalisation de l'image entre 0 et 1
-            ghost_error = cv2.imwrite(path_img, resized_img_normalised)
+            #resized_img_normalised = resized_image/255 # Normalisation de l'image entre 0 et 1
+            #ghost_error = cv2.imwrite(path_img, resized_img_normalised)
+            ghost_error = cv2.imwrite(path_img, resized_image)
 
 ################################
 ### Séparation en Train/Test ###
