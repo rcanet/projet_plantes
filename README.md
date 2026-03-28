@@ -26,9 +26,10 @@ Le dataset contient :
     → [01_Scripts/03_modelisation.py](01_Scripts/03_modelisation.py)
 - Présentation par streamlit
     → [01_Scripts/04_streamlit.py](01_Scripts/04_streamlit.py)
+    → [01_Scripts/streamlit/](01_Scripts/streamlit/)
 
 ## Résultats
-Deux modèles de reconnaissance ont été crées. L'un est un modèle entrainé entièrement à partir du jeu de donnée, tandis que l'autre est issue du *Transfer Learning* de ResNet. Par soucis d'espace de stockage, seulement le premier modèle est présent dans [03_model/](03_model/).
+Deux modèles de reconnaissance ont été crées. L'un est un modèle entrainé entièrement à partir du jeu de donnée, tandis que l'autre est issue du *Transfer Learning* de ResNet. Par soucis d'espace de stockage, aucun modèle n'est présent dans [03_model/](03_model/).
 
 ## Installation
 Clone the repository and install dependencies:

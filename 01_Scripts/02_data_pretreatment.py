@@ -96,57 +96,62 @@ print(f"Supprimé : {compteur} images")
 ####################################################################
 ### Pré-traitement des images : Rescaling et pixel normalisation ###
 ####################################################################
+# Définir le seuil de floue du filtre Laplacien
+df_explo = pd.read_csv("02_data/2026-02-20_data_preliminary.csv")
+seuil_laplace = df_explo['laplacian_var'].quantile(q = 0.05)
 
-# Create an empty list to gather the information about the images and a list for unretrieved images
+# Initialisation de la liste des infos sur les images
 data_list = []
 
-# Parameters to rescale the pictures to a 256x256 format (penser ) 254 x 254 par rapport à resnet
+# Dimensions cibles du redimensionnement
 new_width = 256
 new_height = 256
 
-## Rescale the out of scale images and create a dataframe to resume data
+# Redimensioner les images, enlever celles qui sont trop floues seulon un seuil
 for i_sp in tqdm(os.listdir(base_path)):
 
     ## Liste de toutes les images pour l'espèce en cours
     list_img = os.listdir(os.path.join(base_path, i_sp))
 
-    ## Check the size of the picture
+    ## Vérifier la taille, le floue et redimensionner si besoin
     for i_img in list_img :
 
-        ## Retrieve the disease name (if diseased)
+        ## Récupérer le nom de la maladie
         disease_name = i_img.split("__")[1] if "Diseased" in i_img else np.nan
 
         path_img = os.path.join(base_path, i_sp, i_img)
 
-        ## Read the image in color
+        ## Lecture de l'image en couleur
         curr_img = cv2.imread(path_img, cv2.IMREAD_C)
 
         if curr_img is None:
             print(f"[!] Image non lue : {path_img}")
             continue
 
-        # Filtre : Niveau de floue - basé que le quantile 10% (pic) 
+        # Filtre : Niveau de floue - basé que le quantile 5% 
         laplacian_var = cv2.Laplacian(curr_img, cv2.CV_64F).var() # Calculer le niveau de floue
 
-        #if laplacian_var < 162.50:
-        #    print(f"[!] Image inférieure au seuil de floue : {path_img}")
+        if laplacian_var <= seuil_laplace:
+            print(f"[!] Image inférieure au seuil de floue : {path_img}. Supprimé")
+            os.remove(path_img)
 
-        ## Assess the size [height, width] & create the path to save the picture 
-        size = [curr_img.shape[0], curr_img.shape[1]]
-        
+        else :
+            
+            size = [curr_img.shape[0], curr_img.shape[1]]
+            
 
-        if all(i_dim == 256 for i_dim in size):
-            var_rescaled = 0
-            #curr_img_normalised = curr_img/255 # Normalisation de l'image entre 0 et 1
-            #ghost_error = cv2.imwrite(path_img, curr_img_normalised)
-            ghost_error = cv2.imwrite(path_img, curr_img)
-                
-        else:
-            var_rescaled = 1
-            resized_image = cv2.resize(curr_img, (new_width, new_height), interpolation=cv2.INTER_LINEAR) # Redimensionnalisation de l'image
-            #resized_img_normalised = resized_image/255 # Normalisation de l'image entre 0 et 1
-            #ghost_error = cv2.imwrite(path_img, resized_img_normalised)
-            ghost_error = cv2.imwrite(path_img, resized_image)
+            if all(i_dim == 256 for i_dim in size):
+                var_rescaled = 0
+                #curr_img_normalised = curr_img/255 # Normalisation de l'image entre 0 et 1
+                #ghost_error = cv2.imwrite(path_img, curr_img_normalised)
+                ghost_error = cv2.imwrite(path_img, curr_img)
+                    
+            else:
+                var_rescaled = 1
+                resized_image = cv2.resize(curr_img, (new_width, new_height), interpolation=cv2.INTER_LINEAR) # Redimensionnalisation de l'image
+                #resized_img_normalised = resized_image/255 # Normalisation de l'image entre 0 et 1
+                #ghost_error = cv2.imwrite(path_img, resized_img_normalised)
+                ghost_error = cv2.imwrite(path_img, resized_image)
 
 ################################
 ### Séparation en Train/Test ###
@@ -158,6 +163,8 @@ splitfolders.ratio("02_data/data_sp_detection/", output="02_data/data_spDetectio
 #########################
 ### Data Augmentation ###
 #########################
+# Définir le nombre d'augmentation
+df_explo.loc[df_explo["laplacian_var"] > seuil_laplace, "sp"].value_counts()
 
 # Fonction permettant de faire de la data_augmentation 
 def randomFlip(img):
@@ -244,12 +251,36 @@ def picture_augmentation(target, path_img):
                     path_new_img = os.path.join(path_sp, f"DA_reste__{img_name}")
                     cv2.imwrite(path_new_img, img_aug)
 
-target = 2500
+target = 2400 # minimum de 242 images dans une classe
 path_augmentation = "02_data/data_spDetection_ready/train/"
 picture_augmentation(target, path_augmentation)
 
 
 # Vérification de la data augmentation
+# Vérifier Dataframe
+def count_img(path_img):
+    classes = []
+    counts = []
+    
+    for x_sp in sorted(os.listdir(path_img)):
+        path_sp = os.path.join(path_img, x_sp)
+        if os.path.isdir(path_sp):
+            classes.append(x_sp)
+            counts.append(len(os.listdir(path_sp)))
+            
+    df = pd.DataFrame({
+        "classe" : classes,
+        "nb_images" : counts
+    })
+
+    return df
+
+df_img_train = count_img("02_data/data_spDetection_ready/train")
+df_img_val = count_img("02_data/data_spDetection_ready/val")
+df_img = pd.concat([df_img_train, df_img_val])
+df_img["nb_images"].sum()
+
+# Vérifier graphiquement
 def plot_distribution(path_img):
     classes = []
     counts = []
@@ -270,3 +301,4 @@ def plot_distribution(path_img):
 
 # Utilisation
 plot_distribution("02_data/data_spDetection_ready/train")
+plot_distribution("02_data/data_spDetection_ready/val")

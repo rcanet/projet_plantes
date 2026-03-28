@@ -12,7 +12,7 @@ import random
 ##############################################
 ### Données brutes -> données à pré-traité ###
 ##############################################
-# Créer de l'architecture pour les analyse spréliminaires
+# Créer l'architecture pour les analyse spréliminaires
 # data_preliminary/
 # - Diseased/
 # - Healthy/
@@ -54,7 +54,7 @@ images = [
     os.path.join(root, f)
     for root, _, files in os.walk(new_path)
     for f in files
-    if f.endswith((".png", ".jpg", ".jpeg"))
+    if f.lower().endswith((".png", ".jpg", ".jpeg"))
 ]
 
 nb_images = 5
@@ -68,6 +68,7 @@ for i, img_path in enumerate(random.sample(images, nb_images)):
     plt.imshow(img)
     plt.title(species, fontsize=8)
     plt.axis("off")
+    print("Done")
 
 plt.show();
 
@@ -89,7 +90,7 @@ list_paths_h = [path_img_h + sp for sp in list_files_h]
 list_paths_d = [path_img_d + sp for sp in list_files_d]
 
 # -------------------------------------------------
-# Parcours du dataset pré-traité (Healthy + Diseased)
+# Parcourir le dataset pré-traité (Healthy + Diseased)
 # Objectif : extraire pour chaque image :
 # - nom de l'espèce
 # - nom de la maladie si existante
@@ -101,7 +102,7 @@ for species_path in tqdm(list_paths_h + list_paths_d):
 
     # Récupérer le nom des espèces
     species_name = species_path.split("/")[-1]
-    species_name = species_name.split("_")[0]
+    species_name = species_name.split("__")[0]
 
     # Récupérer le nom de la maladie (si malade)
     disease_name = species_path.split("___")[-1] if "Disease" in species_path else None
@@ -146,29 +147,46 @@ data_df.head()
 today = datetime.today().strftime("%Y-%m-%d")
 data_df.to_csv('02_data/' + today + '_data_preliminary.csv', index=None)
 pd.DataFrame(list_unread).to_csv('02_data/' + today + '_unread_files.csv', index=None)
+# data_df = pd.read_csv("02_data/2026-02-20_data_preliminary.csv")
 
 ##################################
 ### Représentations Graphiques ###
 ##################################
 
 # Niveau de floue
-plt.hist(data_df[data_df["laplacian_var"] < 1000]["laplacian_var"], bins = 50);
-plt.show();
-print(data_df['laplacian_var'].quantile(q = [0.05, 0.1, 0.15, 0.20, 0.25]))
+seuil = np.quantile(data_df["laplacian_var"], 0.05)
 
-data_df['is_diseased'] = data_df['disease'].notna().astype(int)
+sns.histplot(
+    data_df[data_df["laplacian_var"] < 1000]["laplacian_var"],
+    bins=50,
+    kde=True
+)
+plt.axvline(seuil, color="red", linestyle="--", label="Seuil de flou (5%)")
+xticks = list(plt.xticks()[0])
+xticks.append(seuil)
+
+plt.xlabel("Variance du Laplacien")
+plt.ylabel("Densité")
+plt.xticks(sorted(xticks))
+plt.xlim(0, 1000)
+plt.legend()
+plt.show();
+print(data_df['laplacian_var'].quantile(q = [0, 0.05, 0.1, 0.15, 0.20, 0.3, 1]))
+
 
 
 # Distribution des images
+data_df['is_diseased'] = data_df['disease'].notna().astype(int)
+
 order_distribution = data_df['sp'].value_counts().index
 
 sns.catplot(data = data_df, y = 'sp', 
                 kind = 'count', 
                 order = order_distribution, 
-                hue = 'is_diseased',
+#                hue = 'is_diseased',
                 legend = False)
 
-plt.legend(title = "Maladie", loc = 'right', labels = ["Malade", "Saine"])
+#plt.legend(title = "Maladie", loc = 'right', labels = ["Malade", "Saine"])
 plt.xlabel("Nombre d'images")
 plt.ylabel("Espèces")
 plt.grid()
@@ -203,6 +221,7 @@ plt.show()
 ## Et-ce qu'il y a des doublons ? 
 data_df["id"] = data_df.sp.astype(str) + data_df.name.astype(str)
 print(f"Il y a {data_df.id.duplicated().sum()} doublon(s).")
+
 
 ## Moyenne des canaux RGB
 fig = plt.figure(figsize=(10,10))
