@@ -70,7 +70,7 @@ def show_grad_cam_cnn(images, model):
     number_of_images = 1 # images.shape[0]
     conv_layers = [layer.name for layer in model.layers if isinstance(layer, Conv2D)]
 
-    fig = plt.figure(figsize=(5,5))
+    fig = plt.figure(figsize=(10,10))
 
     for j, layer in enumerate(conv_layers):
 
