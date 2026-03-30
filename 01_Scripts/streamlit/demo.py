@@ -94,5 +94,8 @@ if uploaded_file is not None:
 
     
     
+col_vide1, col_image, col_vide2 = st.columns([1, 2, 1]) 
+
+with col_image:
     lenet_grad = show_grad_cam_cnn(image_batch, mod_lenet)
     st.pyplot(lenet_grad)

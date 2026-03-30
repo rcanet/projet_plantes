@@ -28,8 +28,18 @@ Le dataset contient :
     → [01_Scripts/04_streamlit.py](01_Scripts/04_streamlit.py)
     → [01_Scripts/streamlit/](01_Scripts/streamlit/)
 
-## Résultats
 Deux modèles de reconnaissance ont été crées. L'un est un modèle entrainé entièrement à partir du jeu de donnée, tandis que l'autre est issue du *Transfer Learning* de ResNet. Par soucis d'espace de stockage, aucun modèle n'est présent dans [03_model/](03_model/).
+
+## Résultats
+- Les deux modèles obtiennent de bons (F1-score) pour classer les plantes et l'accuracy générale est supérieure à 95 % ;
+- Ils utilisent principalement les contours des feuilles et les nervures pour la classification MAIS parfois le fond des images également ;
+- Les deux modèles ont du mal à classer avec une grande précision deux espèces de plantes adventices ("Black grass" et  "Loose Silky-bent")
+- Le modèle issue de ResNet50 est plus performant avec une accuracy de 99%. 
+
+**Pistes d'amélioration** :
+- Augmentater la taille du jeu de données (notamment pour les plantes adventices) ;
+- Segmenter les images pour éviter l'apprentissage du fond des images.
+
 
 ## Installation
 Clone the repository and install dependencies:
@@ -40,4 +50,6 @@ pip install -r requirements.txt
 ```
 
 ## Exemple d'utilisation
-
+Visualisez ici les performances de nos modèles en conditions réelles. L'analyse Grad-CAM permet de confirmer l'interprétabilité des résultats en mettant en évidence les zones de la feuille (taches, nervures) ayant guidé la décision des modèles, garantissant ainsi un diagnostic basé sur des critères botaniques réels.
+![Démonstration de classification](04_results/demo_readme.png)
+![Démonstration de classification - GRAD-CAM](04_results/demo_readme_grad.png)
