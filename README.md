@@ -37,7 +37,7 @@ Deux modèles de reconnaissance ont été crées. L'un est un modèle entrainé 
 - Le modèle issue de ResNet50 est plus performant avec une accuracy de 99%. 
 
 **Pistes d'amélioration** :
-- Augmentater la taille du jeu de données (notamment pour les plantes adventices) ;
+- Augmenter la taille du jeu de données (notamment pour les plantes adventices) ;
 - Segmenter les images pour éviter l'apprentissage du fond des images.
 
 
